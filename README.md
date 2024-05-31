@@ -2,13 +2,13 @@
 
 This is a fork from [XTTS-streaming-server](https://github.com/coqui-ai/xtts-streaming-server)
 
-##Added features in this version:
+## Added features in this version:
 
-1) A Jupyter Notebook designed to run FastXttsAPI in Google Colab and take advantage of the GPU capabilities of the free tier.
+1) A Jupyter Notebook designed to run FastXttsAPI in Google Colab and take advantage of the GPU capabilities of the free tier. [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([FastXttsAPI_notebook.ipynb](https://github.com/3choff/FastXttsAPI/blob/main/FastXttsAPI_notebook.ipynb))
 
 2) A new test_streaming script that allows you to choose from 63 Studio Voices to test the API and uses PyAudio for playback.
 
-##Planned features:
+## Planned features:
 
 1) Concurrent streaming requests
 
@@ -17,6 +17,7 @@ This is a fork from [XTTS-streaming-server](https://github.com/coqui-ai/xtts-str
 3) Improved error handling
 
 4) Migration to the actively maintained [idiap/coqui-ai-TTS](https://github.com/idiap/coqui-ai-TTS) repository, as the original Coqui TTS is discontinued
+## Video Demo
 
 https://github.com/coqui-ai/xtts-streaming-server/assets/17219561/7220442a-e88a-4288-8a73-608c4b39d06c
 
