@@ -5,7 +5,9 @@ import tempfile
 import wave
 import torch
 import numpy as np
-from typing import List
+import json
+
+from typing import List, Dict, Optional
 from pydantic import BaseModel
 
 from fastapi import FastAPI, UploadFile, Body
@@ -46,9 +48,9 @@ print("Running XTTS Server ...", flush=True)
 
 ##### Run fastapi #####
 app = FastAPI(
-    title="XTTS Streaming server",
-    description="""XTTS Streaming server""",
-    version="0.0.1",
+    title="FastXttsAPI",
+    description="""FastAPI app for Coqui XTTS v2""",
+    version="0.0.2",
     docs_url="/",
 )
 
@@ -96,7 +98,15 @@ def encode_audio_common(
         return b64_encoded
     else:
         return wav_buf.read()
-
+    
+def get_embeddings(voice: str) -> Dict[str, List[float]]:
+    SPEAKERS_DIR = "./studio_speakers"
+    with open(os.path.join(SPEAKERS_DIR, f"{voice}.json"), 'r') as f:
+        embeddings = json.load(f)
+    return {
+        "speaker_embedding": embeddings["speaker_embedding"],
+        "gpt_cond_latent": embeddings["gpt_cond_latent"],
+    }
 
 class StreamingInputs(BaseModel):
     speaker_embedding: List[float]
@@ -105,7 +115,6 @@ class StreamingInputs(BaseModel):
     language: str
     add_wav_header: bool = True
     stream_chunk_size: str = "20"
-
 
 def predict_streaming_generator(parsed_input: dict = Body(...)):
     speaker_embedding = torch.tensor(parsed_input.speaker_embedding).unsqueeze(0).unsqueeze(-1)
@@ -134,6 +143,33 @@ def predict_streaming_generator(parsed_input: dict = Body(...)):
         else:
             yield chunk.tobytes()
 
+def predict_stream(parsed_input: dict = Body(...)):
+    embeddings = get_embeddings(parsed_input.voice)
+    speaker_embedding = torch.tensor(embeddings["speaker_embedding"]).unsqueeze(0).unsqueeze(-1)
+    gpt_cond_latent = torch.tensor(embeddings["gpt_cond_latent"]).reshape((-1, 1024)).unsqueeze(0)
+    text = parsed_input.text
+    language = parsed_input.language
+
+    stream_chunk_size = int(parsed_input.stream_chunk_size)
+    add_wav_header = parsed_input.add_wav_header
+
+
+    chunks = model.inference_stream(
+        text,
+        language,
+        gpt_cond_latent,
+        speaker_embedding,
+        stream_chunk_size=stream_chunk_size,
+        enable_text_splitting=True
+    )
+
+    for i, chunk in enumerate(chunks):
+        chunk = postprocess(chunk)
+        if i == 0 and add_wav_header:
+            yield encode_audio_common(b"", encode_base64=False)
+            yield chunk.tobytes()
+        else:
+            yield chunk.tobytes()
 
 @app.post("/tts_stream")
 def predict_streaming_endpoint(parsed_input: StreamingInputs):
@@ -166,7 +202,37 @@ def predict_speech(parsed_input: TTSInputs):
 
     return encode_audio_common(wav.tobytes())
 
+class TTSInputsSpeech(BaseModel):
+    voice: str
+    text: str
+    language: str
+    stream: Optional[bool] = False
+    add_wav_header: Optional[bool] = True
+    stream_chunk_size: Optional[str] = "20"
+    response_format: Optional[str] = "wav"
 
+@app.post("/v1/speech")
+def predict_speech(parsed_input: TTSInputsSpeech):
+    embeddings = get_embeddings(parsed_input.voice)
+    speaker_embedding = torch.tensor(embeddings["speaker_embedding"]).unsqueeze(0).unsqueeze(-1)
+    gpt_cond_latent = torch.tensor(embeddings["gpt_cond_latent"]).reshape((-1, 1024)).unsqueeze(0)
+    text = parsed_input.text
+    language = parsed_input.language
+
+    if parsed_input.stream:
+        return StreamingResponse(
+            predict_stream(parsed_input),
+            media_type="audio/wav",
+        )
+    else:
+        out = model.inference(
+            text,
+            language,
+            gpt_cond_latent,
+            speaker_embedding,
+        )
+        wav = postprocess(torch.tensor(out["wav"]))
+        return encode_audio_common(wav.tobytes())
 @app.get("/studio_speakers")
 def get_speakers():
     if hasattr(model, "speaker_manager") and hasattr(model.speaker_manager, "speakers"):
@@ -183,3 +249,9 @@ def get_speakers():
 @app.get("/languages")
 def get_languages():
     return config.languages
+
+@app.get("/voices")
+def get_voices():
+    voices = os.listdir("./studio_speakers")
+    voices = [os.path.splitext(voice)[0] for voice in voices]
+    return {"voices": voices}
