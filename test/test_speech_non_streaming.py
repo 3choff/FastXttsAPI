@@ -5,7 +5,7 @@ SERVER_URL = 'https://localhost:8000'
 
 SPEAKER_NAME = "Aaron Dreschner"
 
-text = "A quick brown fox jumps over the lazy dog."
+text = "As the sun dipped below the horizon, a lone lighthouse stood tall, its beam piercing the darkness."
 lang = "en"
 
 def tts(text, speaker_name, lang):

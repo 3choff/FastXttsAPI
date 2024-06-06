@@ -1,4 +1,5 @@
 demo_outputs
+cloned_speakers
 # Environments
 .env
 .venv
