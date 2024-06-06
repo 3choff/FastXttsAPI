@@ -24,7 +24,7 @@ https://github.com/coqui-ai/xtts-streaming-server/assets/17219561/7220442a-e88a-
 
 ## Run the server
 
-### Build the image yourself
+### Build the Docker image
 
 To build the Docker container Pytorch 2.1 and CUDA 11.8 :
 
