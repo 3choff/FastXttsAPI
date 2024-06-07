@@ -54,6 +54,20 @@ app = FastAPI(
     docs_url="/",
 )
 
+@app.get("/info")
+def get_info():
+    num_threads = int(os.environ.get("NUM_THREADS", os.cpu_count()))
+    use_cpu = os.environ.get("USE_CPU", "0")
+    device = "cuda" if use_cpu == "0" else "cpu"
+    cuda_available = torch.cuda.is_available()
+
+    return {
+        "num_threads": num_threads,
+        "use_cpu": use_cpu,
+        "device": device,
+        "cuda_available": cuda_available,
+        "model_in_use": os.path.basename(model_path),
+    }
 
 @app.post("/clone_speaker")
 def predict_speaker(wav_file: UploadFile):

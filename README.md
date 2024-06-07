@@ -2,20 +2,20 @@
 
 This is a fork from [XTTS-streaming-server](https://github.com/coqui-ai/xtts-streaming-server)
 
-## Added features in this version:
+## Added features in the current version:
 
 1) A new endpoint capable of receiving both streaming and non-streaming requests, using simpler parameters and offering 62 preset studio voices.
 
 2) A Jupyter Notebook designed to run FastXttsAPI in Google Colab and take advantage of the GPU capabilities of the free tier. [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([FastXttsAPI_notebook.ipynb](https://github.com/3choff/FastXttsAPI/blob/main/FastXttsAPI_notebook.ipynb))
 
 
-## Planned features:
+## Future Roadmaps
 
-1) Concurrent streaming requests
+- [ ] Concurrent streaming requests
 
-2) Improved error handling
+- [ ] Improved error handling
 
-3) Migration to the actively maintained [idiap/coqui-ai-TTS](https://github.com/idiap/coqui-ai-TTS) repository, as the original Coqui TTS is discontinued
+- [ ] Migration to the actively maintained [idiap/coqui-ai-TTS](https://github.com/idiap/coqui-ai-TTS) repository, as the original Coqui TTS is discontinued
 
 ## Video Demo
 
@@ -24,7 +24,9 @@ https://github.com/coqui-ai/xtts-streaming-server/assets/17219561/7220442a-e88a-
 
 ## Run the server
 
-### Build the Docker image
+You can deploy this FastAPI app either in a Docker container (recommended), locally, or in Google Colab [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([FastXttsAPI_notebook.ipynb](https://github.com/3choff/FastXttsAPI/blob/main/FastXttsAPI_notebook.ipynb)).
+
+### Using Docker
 
 To build the Docker container Pytorch 2.1 and CUDA 11.8 :
 
@@ -40,9 +42,29 @@ $ docker run --gpus all -e COQUI_TOS_AGREED=1 --rm -p 8000:80 fastxttsapi
 Setting the `COQUI_TOS_AGREED` environment variable to `1` indicates you have read and agreed to
 the terms of the [CPML license](https://coqui.ai/cpml). (Fine-tuned XTTS models also are under the [CPML license](https://coqui.ai/cpml))
 
+### Local Installation
+
+#### Unix/Linux
+
+```bash
+$ git clone https://github.com/3choff/FastXttsAPI.git
+$ cd FastXttsAPI/server
+$ pip install -r requirements.txt
+$ COQUI_TOS_AGREED=1 fastapi run main.py
+```
+
+#### Windows
+
+```cmd
+> git clone https://github.com/3choff/FastXttsAPI.git
+> cd FastXttsAPI\server
+> pip install -r requirements.txt
+> set COQUI_TOS_AGREED=1 && fastapi run main.py
+```
+
 ## Testing the running server
 
-Once your Docker container is running, you can test that it's working properly. You will need to run the following code from a fresh terminal.
+Once your server is running, you can test that it's working properly. You will need to run the following code from a fresh terminal.
 
 ### Using the gradio demo in the video above
 
